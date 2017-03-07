@@ -1,0 +1,34 @@
+#!/bin/sh
+
+N=1
+devlist="/dev/sdb"
+dirlist="/u0${N}/databases /u0${N}/txnlogs /u0${N}/bits"
+newdisk=0
+
+set -x
+
+for f in ${devlist} ; do
+  if [ ! -e ${f} ]; then
+    echo "ERROR: block volume ${f} does not exist (test -e failed)"
+    exit 1
+  fi
+  mount ${f}1 /u0${N}
+  if [ $? -ne 0 ]; then
+    newdisk=1
+  fi
+
+  if [ $newdisk -gt 0 ]; then
+    sfdisk ${f} <<EOF
+,,L
+EOF
+    mkfs -T ext4 ${f}1
+  fi
+  mkdir -p /u0${N}
+  if [ ${newdisk} -gt 0 ]; then
+    mount ${f}1 /u0${N}
+  fi
+  chown opc:opc /u0${N}
+  chmod 775 /u0${N}
+  N=`expr ${N} + 1`
+done
+df -hm

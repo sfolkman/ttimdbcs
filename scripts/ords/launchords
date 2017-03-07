@@ -1,0 +1,18 @@
+#!/bin/sh
+
+ttsvc_root=${TTSVC_ROOT:-/opt}
+. ${ttsvc_root}/ttimdbcs/conf/ttsvc.conf
+. ${ttsvc_config}/ords.conf
+
+cd ${ordsdir}
+java -jar ${warfile} configdir ${ordsdir}
+mkdir -p ${ordsdir}/${ordscontext}/jdbc/ccpmapi
+cp ${ttsvc_config}/pool.xml ${ordsdir}/${ordscontext}/jdbc/ccpmapi
+java -jar ${warfile} plugin ${ttsvc_pkgs}/classic-cp-mapi-0.0.1-SNAPSHOT.jar
+java -jar ${warfile} plugin ${ttdir}/lib/ttjdbc8.jar
+java -jar ${warfile} standalone --port ${ordsport} --context-path ${ordscontext} --apex-images ${ordscontext} --doc-root ${ordsdir} --static-context-path ${ordscontext} 2>&1 &
+echo $! > ${ordsdir}/ords.pid
+sleep 5 # let service find pidfile
+
+
+

@@ -1,0 +1,172 @@
+#!/usr/bin/perl -w
+#
+# sets shmmax to 80% of total memory
+# sets semaphores to 2048
+# optionally tries to set any kernel parameter name=value pair passed in
+# name in name=value must specify module, eg. fs.file-max not just file-max.
+# 
+
+use strict;
+use File::Basename;
+use Cwd  qw(abs_path);
+#use lib dirname(abs_path($0)) . '/perl/lib';
+use Getopt::Long;
+#use IMDBCS::logging;
+
+#my $log = IMDBCS::initLogging("kernelparameters");
+
+my $rc;
+
+my $gb = (1024*1024*1024);
+my $mb = (1024*1024);
+my $targetSem=2048;
+my $targetShmmax;
+my $targetShmall;
+
+my $fh;
+my $debug = 0;
+my $verbose = 0;
+my $paramPairs;
+my $Usage = <<EOF;
+Usage: kernelParameters [--debug 
+                         --parameters name=value [name=value]...
+                         --verbose]
+EOF
+#if (defined(@ARGV)) {
+while ($#ARGV > 0) {
+    $rc = GetOptions('parameters=s%{1,}',\$paramPairs,
+		     'debug',\$debug,
+		     'verbose',\$verbose
+	) or die "ERROR: Unknown/invalid command line argument\n$Usage" ;
+#    if (defined($paramPairs)) {
+#	for my $key (keys %{$paramPairs}) {
+#	    print "$key => $paramPairs->{$key}\n";
+#	}
+#    }
+}
+
+sub getKernelParameters {
+    my $param = shift || die "ERROR: getKernelParameters() expected parameter";
+    my $cmd = "/sbin/sysctl $param";
+    my $foundParam;
+    open($fh,"$cmd 2>&1|") or die "ERROR: can't open $cmd $!";
+    while (<$fh>) {
+	if (/\w+\.\w+\s+=\s+(.*)/) {
+	    $foundParam =  $1;
+	    last;
+	}
+    }
+    close $fh;
+    return (defined($foundParam) ? $foundParam : undef);
+}
+
+
+sub setKernelParameters {
+    my $sysFile="/etc/sysctl.conf";
+    my $param = shift || 
+	die "ERROR: setKernelParameters() expected variable parameter";
+    my $value = shift || 
+	die "ERROR: setKernelParameters() expected value parameter";
+    my $cmd = "sed -i.bck -e \'/$param/d\' $sysFile";
+
+    $rc = system($cmd);
+    die "ERROR: Error setting kernel parameter, $cmd returned $!\n" 
+	if (!defined($rc) || $rc != 0);
+
+    $cmd = "echo $param=$value >> $sysFile";
+    $rc = system($cmd);
+    die "ERROR: Error setting kernel parameter, $cmd returned $!\n" 
+	if (!defined($rc) || $rc != 0);
+
+    $cmd = "/sbin/sysctl -q -e -p $sysFile";
+    $rc = system($cmd);
+    die "ERROR: Error setting kernel parameter, $cmd returned $!\n" 
+	if (!defined($rc) || $rc != 0);
+
+    # verify
+    #my $paramToVerify = "$param = $value";
+    $rc = getKernelParameters($param);
+    if (defined($rc)) {
+	# remove white space
+	$rc =~ s/\s?//g;
+	$value =~ s/\s?//g;
+        die "ERROR: Can't verify kernel parameter setting for $param, expected $value, current setting $rc \n" if ("$rc" ne "$value");
+    }
+    return $value;
+}
+
+
+# get total memory in bytes
+# round to nearest GB
+# return 80%(total) in bytes for sysctl
+open($fh,'cat /proc/meminfo|') or die "ERROR: can't open /proc/meminfo $!";
+while (<$fh>) {
+    if (/MemTotal.*?(\d+)\s+/) {
+	$rc =  int($1 / $mb )+1;
+	# save ~20% for kernel, fs buffer cache
+	$rc *= int($gb * 0.8);
+	$targetShmmax = $rc;
+	last;
+    }
+}
+close $fh;
+
+if (defined($rc)) {
+    # sanity
+    die "ERROR: Less than 1GB memory? quit." if ($rc < (1024*1024*1024));
+    print "INFO: Trying to allow for at least $rc bytes of shared memory\n";
+}
+else {
+    die "ERROR: Can't get total memory from /proc/meminfo";
+}
+$rc = undef;
+
+
+# adjust shmall
+my $pageSize = 4096;
+$rc = getKernelParameters("kernel.shmall");
+if (defined($rc)) {
+    #$log->trace("found kernel.shmall=$rc\n");
+    $targetShmall = int($targetShmmax / $pageSize);
+    if ($rc < $targetShmall) {
+	setKernelParameters("kernel.shmall",$targetShmall);
+    }
+}
+
+# adjust shmmax
+$rc = getKernelParameters("kernel.shmmax");
+if (defined($rc)) {
+    #$log->trace("found kernel.shmmax=$rc\n");
+    if ($rc < $targetShmmax) {
+	setKernelParameters("kernel.shmmax",$targetShmmax);
+    }
+}
+
+
+#adjust sem
+$rc = getKernelParameters("kernel.sem");
+if (defined($rc)) {
+    #$log->trace("found kernel.sem=$rc\n");
+    if ($rc =~ /(\d+)\s+(.*)/) {
+	my $semmsl = $1; my $rest = $2;
+	if ($semmsl < $targetSem) {
+	    my $newSem = "$targetSem $rest";
+	    setKernelParameters("kernel.sem",$newSem);
+	}
+    }
+}
+
+#test
+$rc = getKernelParameters("donkey.breath");
+if (defined($rc)) {
+     #$log->trace("smelled donkey breath=$rc\n");
+}
+#setKernelParameters("donkey.breath","sour"); need to catch stderr
+
+# remaining parameters
+if (defined($paramPairs)) {
+    for my $key (keys %{$paramPairs}) {
+	#$log->trace("$key => $paramPairs->{$key}\n");
+	setKernelParameters($key,"$paramPairs->{$key}");
+    }
+}

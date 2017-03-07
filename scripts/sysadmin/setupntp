@@ -1,0 +1,27 @@
+#!/bin/sh
+
+yum install -y ntp
+
+#echo >> /etc/ntp.conf <<EOF 
+#restrict 10.0.0.0 netmask 255.255.0.0 nomodify notrap
+#server 2.rhel.pool.ntp.org
+#server 3.rhel.pool.ntp.org
+#server 0.rhel.pool.ntp.org  
+#server 1.rhel.pool.ntp.org
+#EOF
+# firewall-cmd --add-service=ntp --permanent
+# firewall-cmd --reload
+
+systemctl enable ntpd
+systemctl start ntpd
+systemctl status ntpd
+
+ntpdate -q 0.rhel.pool.ntp.org
+
+
+
+
+
+
+
+

@@ -1,0 +1,10 @@
+#!/bin/sh
+
+inst_path=$1
+location=$2
+port=$3
+svrhost=$4
+
+$inst_path/bin/ttinstancecreate -location $location -name instance1 -csPort $port -serverhost $svrhost -clientonly
+
+

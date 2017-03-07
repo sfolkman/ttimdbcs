@@ -1,0 +1,14 @@
+#!/bin/sh
+
+ip=localhost
+port=8080
+while [ $# -gt 0 ]; do
+case $1 in
+--port) shift ; port=$1 ;;
+--ip) shift ; ip=$1 ;;
+esac
+shift
+done
+
+#curl localhost:8080/ords/oauth/ 
+echo "GET /ords/oauth/" | nc ${ip} ${port}

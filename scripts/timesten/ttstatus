@@ -1,0 +1,31 @@
+#!/usr/bin/sh
+
+host=
+ip=
+dsn=
+
+echo $#
+
+if [ $# -eq 3 ]; then
+    host=$1
+    ip=$2
+    dsn=$3
+elif [ $# -eq 2 ]; then
+    host=$1
+    ip=$2
+elif [ $# -eq 1 ]; then
+    dsn=$3
+fi
+
+if [ "x${host}" != "x" ]; then
+    /bin/echo -e "GET whoareyou HTTP/1.0\r\n" | nc ${host} ${ip}
+fi
+
+. /home/opc/conf/ttdb.conf 
+    
+sudo su -- oracle ${ttdir}/bin/ttstatus -json ${dsn}
+
+
+
+
+

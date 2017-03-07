@@ -1,0 +1,16 @@
+#!/bin/sh
+
+# 123    ntp
+# 6624   timestend
+# 6625   ttcserver
+# 3754   timestenrepd
+# 8080   ords
+
+for port in 123 6624 6625 3754 8080 ; do
+ firewall-cmd --zone=public --remove-rich-rule="rule family=ipv4 source address=\"10.0.0.0/16\" port port="${port}" protocol=\"tcp\" accept"
+ firewall-cmd --zone=public --remove-rich-rule="rule family=ipv4 source address=\"10.0.0.0/16\" port port="${port}" protocol=\"tcp\" accept"  --permanent
+ firewall-cmd --zone=public --add-rich-rule="rule family=ipv4 source address=\"10.0.0.0/16\" port port="${port}" protocol=\"tcp\" accept"
+ firewall-cmd --zone=public --add-rich-rule="rule family=ipv4 source address=\"10.0.0.0/16\" port port="${port}" protocol=\"tcp\" accept"  --permanent
+done
+firewall-cmd --zone=public --list-all
+

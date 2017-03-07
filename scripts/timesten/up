@@ -1,0 +1,11 @@
+#!/bin/sh
+
+. /home/opc/conf/ttdb.conf
+
+sudo systemctl start timesten
+${ttdir}/bin/ttadmin -ramload ${dbname}
+
+
+
+
+

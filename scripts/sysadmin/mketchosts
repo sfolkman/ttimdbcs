@@ -1,0 +1,24 @@
+#!/bin/sh
+
+id=$(id -u)
+if [ ${id} -ne 0 ]; then
+    "ERROR: $0 needs to be run as root, id -u is ${id}"
+fi
+
+TMPFILE=`mktemp`
+head -2 /etc/hosts > ${TMPFILE}
+ip=$(ip addr show | awk '$1 == "inet" && $5 != "lo" {split($2,a,"/"); print a[1]}')
+host=$(basename $(cat /etc/hostname) .localdomain)
+#gets old hostname: host=$(basename $(hostnamectl --static) .localdomain)
+echo "${ip}	${host}.localdomain	${host}" >> ${TMPFILE}
+if [ $? -eq 0 ]; then
+   cp ${TMPFILE} /etc/hosts
+   rm -rf ${TMPFILE}
+   if [ $? -eq 0 ]; then
+       exit 0
+   fi
+fi
+echo "ERROR: can't create /etc/hosts"
+cat ${TMPFILE}
+rm -rf ${TMPFILE}
+exit 1

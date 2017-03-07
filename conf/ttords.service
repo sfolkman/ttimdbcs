@@ -1,0 +1,19 @@
+[Unit]
+Description=TimesTen ORDS Service
+After=cloud-final.service
+
+[Service]
+# environment variable not working
+#Environment="TIMESTEN_HOME=/u01/TimesTen/121110"
+#Environment=JAVA_HOME=/opt/jre1.8
+User=oracle
+Group=oracle
+Type=forking
+Restart=on-failure
+PIDFile=/opt/ords/ords.pid
+ExecStart=/opt/ttimdbcs/scripts/ords/launchords
+#ExecStop=kill -9 $(cat /opt/ords/ords.pid)
+
+[Install]
+WantedBy=multi-user.target
+

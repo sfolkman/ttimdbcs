@@ -1,0 +1,28 @@
+#!/bin/sh
+
+ttsvc_root=${TTSVC_ROOT:-/opt}
+. ${ttsvc_root}/ttimdbcs/conf/ttsvc.conf
+. ${ttsvc_config}/ords.conf
+
+ordfile=$(ls -rt ${ttsvc_pkgs}/ords.3.*.zip | tail -1)
+
+id=$(id -u)
+if [ ${id} -ne 0 ]; then
+   echo "ERROR: need to run as root"
+   exit 1
+fi
+
+ordfullname=$(basename ${ordfile} .zip)
+orddir=${ttsvc_root}/${ordfullname}
+
+mkdir -p ${orddir}
+unzip -o -d ${orddir} ${ordfile}
+chown -R oracle:oracle ${orddir}
+
+rm -f ${svcdir}/ttords.service
+cp ${ttsvc_config}/ttords.service ${svcdir}
+
+systemctl -f enable ttords.service
+systemctl start ttords.service
+
+

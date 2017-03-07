@@ -1,0 +1,40 @@
+#!/bin/sh
+
+MASR=$1
+STBY=$2
+
+if [ "x${MASR}" = "x" ]; then
+  echo "ERROR: no master ip address specified"
+  exit 1
+fi
+if [ "x${STBY}" = "x" ]; then
+  echo "ERROR: no standby ip address specified"
+  exit 1
+fi
+
+. /home/opc/conf/ttdb.conf
+. ${ttdir}/bin/ttenv.sh
+
+DSN=${dbname}
+
+ttIsql dsn=$DSN <<EOF
+
+CREATE ACTIVE STANDBY PAIR ${DSN} on "${MASR}", ${DSN} on "${STBY}"
+RETURN TWOSAFE
+STORE ${DSN} on "${MASR}" PORT 3754
+STORE ${DSN} on "${STBY}" PORT 3754
+RETURN SERVICES OFF WHEN STOPPED
+DURABLE COMMIT ON
+-- ROUTE MASTER ${DSN} on "${MASR}" SUBSCRIBER ${DSN} on "${STBY}"
+-- MASTERIP "${MASR}" PRIORITY 1
+-- SUBSCRIBERIP "${STBY}" PRIORITY 1
+-- MASTERIP "${STBY}" PRIORITY 2
+-- SUBSCRIBERIP "${MASR}" PRIORITY 2
+;
+
+call ttrepstart();
+call ttRepStateGet();
+call ttRepStateSet('ACTIVE');
+call ttRepStateGet();
+EOF
+

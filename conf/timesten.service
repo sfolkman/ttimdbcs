@@ -1,0 +1,28 @@
+[Unit]
+Description=Classic TimesTen
+After=cloud-final.service ttimdbcs.service
+
+[Service]
+# environment variable not working
+#Environment="TIMESTEN_HOME=/u01/TimesTen/121110"
+User=oracle
+Group=oracle
+Type=forking
+Restart=on-failure
+RemainAfterExit=yes
+PIDFile=/u01/TimesTen/121110/info/timestend.pid
+
+# customer that runs ttdaemonadmin messes up systemd control of service
+# can be restored with systemctl restart.
+# move ttdaemonadmin so it doesn't exist on cloud?
+# cloud services would still know where/how to invoke it
+# location/invocation would be visible to customer in systemctl status output
+
+# kill user started or extraneous daemon?
+#ExecStartPre=-/u01/TimesTen/121110/bin/ttDaemonAdmin -stop -force
+ExecStart=/u01/TimesTen/121110/bin/ttDaemonAdmin -start -force -boot
+ExecStopPost=/u01/TimesTen/121110/bin/ttDaemonAdmin -stop -force
+
+[Install]
+WantedBy=multi-user.target
+

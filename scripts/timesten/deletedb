@@ -1,0 +1,10 @@
+#!/bin/sh
+
+. /home/opc/conf/ttdb.conf
+
+. ${ttdir}/bin/ttenv.sh
+${ttdir}/bin/ttdaemonadmin -restart
+${ttdir}/bin/ttdestroy -force ${dbname}
+
+
+

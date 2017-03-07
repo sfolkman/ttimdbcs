@@ -1,0 +1,21 @@
+[Unit]
+Description=TimesTen Service Agent
+After=cloud-final.service 
+Before=timesten.service
+
+[Service]
+# environment variable not working
+#Environment="TIMESTEN_HOME=/u01/TimesTen/121110"
+#User=oracle
+#Group=oracle
+#Type=forking
+#Restart=on-failure
+#PIDFile=/u01/TimesTen/121110/info/timestend.pid
+Type=oneshot
+Restart=no
+RemainAfterExit=yes
+ExecStart=/opt/TimesTen/service/ttimdbsvcagt
+
+[Install]
+WantedBy=multi-user.target
+

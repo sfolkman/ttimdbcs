@@ -1,0 +1,10 @@
+#!/bin/sh
+
+. /home/opc/conf/ttdb.conf
+
+${ttdir}/bin/ttadmin -ramunload ${dbname}
+sudo systemctl stop timesten
+
+
+
+

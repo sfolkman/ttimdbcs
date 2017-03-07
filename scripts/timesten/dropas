@@ -1,0 +1,9 @@
+#!/bin/sh
+
+. /home/opc/conf/ttdb.conf
+. ${ttdir}/bin/ttenv.sh
+
+DSN=${dbname}
+ttIsql -e "call ttrepstateget; call ttrepstop; drop active standby pair; call ttrepstateget; quit;" dsn=$DSN
+
+

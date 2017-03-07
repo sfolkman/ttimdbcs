@@ -1,0 +1,90 @@
+#! /usr/bin/perl -w
+
+use Getopt::Long;
+
+my $progname = $0;
+my $iswindows = ( $^O =~ /MSWin32/ );
+my $debug = 0;
+my $doit = 1;
+my $verbose = 0;
+my $uid = "scott";
+my $pwd = "tiger";
+my $lang = "WE8ISO8859P1";
+my $opts = "";
+my $rampolicy = "";
+my $rp;
+
+my $usage =<<EOF;
+usage: $progname [options] DataStorePath
+Example DataStorePath /datastore/dsnname or dsn=<entry-without-uid/pwd>
+Options are:
+    -h | -help       Print this message and exit.
+    -p <pwd>         Password
+    -r               Set RAM policy manual
+    -u <uid>         User
+EOF
+#    -l <charset>     Database character set
+#    -o <opts>        Other database attributes
+
+exit main();
+
+
+sub main
+{
+  my $help;
+  my $path;
+
+  GetOptions(
+	     'h|help' => \$help,
+	     'l=s'    => \$lang,
+	     'o=s'    => \$opts,
+	     'p=s'    => \$pwd,
+	     'r'      => \$rp,
+	     'u=s'    => \$uid,
+	     'v'      => \$verbose
+	     );
+
+  if ( defined $help && $help ) {
+    print $usage;
+    return 0;
+  }
+
+  if (defined $rp) {
+    $rampolicy = "call ttrampolicyset('manual')";
+  }
+
+  # get the dbname
+  if (scalar(@ARGV) > 1) {
+    print $usage;
+    return 1;
+  } elsif (scalar(@ARGV) == 1) {
+    $path = $ARGV[0];
+  }
+
+  if (!defined($path)) {
+      print "No database path/name defined\n";
+      return(1);
+  }
+
+#  my $crstring =
+#   "\"datastore=" . $path . ";driver=x;databasecharacterset=" . $lang . ";" . $opts . "\" ";
+
+  my $eoption =
+   "\"-e create user " . $uid . " identified by " . $pwd . 
+   "; grant all privileges to " . $uid . 
+   "; revoke admin from " . $uid . "; " 
+   . $rampolicy . ";quit;\" ";
+
+  my $cmd = "ttIsql " . $eoption . $path;
+
+  if ($verbose) {
+    print "Executing: $cmd\n";
+  }
+
+  my $rc = system ($cmd);
+  if ($rc != 0) {
+      print "Error executing $cmd: $rc\n";
+  }
+
+  return 0;
+}

@@ -1,0 +1,42 @@
+#!/bin/sh
+
+# this was used to create original images
+# now we create custom images from existing ones using bmc console
+# see also /usr/lib/systemd/system/tt* /opt/TimesTen/* /opt/ords/*
+
+ttsvc_root=/opt
+if [ $# -eq 1 ]; then
+  ttsvc_root=$1
+fi
+. ${ttsvc_root}/ttimdbcs/conf/ttsvc.conf
+scriptdir=${ttsvc_scripts}/sysadmin
+
+# Done by cloud-init now down to # end of cloud-init
+#echo "==== Installing packages ====" 
+# yum -y install libaio nc ntp perl dstat lvm2 emacs unzip
+#echo "==== Create oracle system group/user ===="
+# ${scriptdir}/mkorauser
+#echo "==== Setting kernel parameters ====" 
+# ${scriptdir}/kernelparameters
+#echo "==== Adding hosts ====" 
+# ${scriptdir}/mketchosts
+#echo "==== Opening firewall ports ====" 
+# ${scriptdir}/firewall
+#echo "==== Mounting devices, filesystems ====" 
+# ${scriptdir}/setupNVMe
+# ${scriptdir}/mkblkvol
+# ${scriptdir}/mkvgs
+# end of cloud-init
+echo "==== Installing JRE ===="
+if [ ! -d ${JAVA_HOME} ]; then
+ tar -C ${ttsvc_root} -xzf ${jrepkg}
+fi
+echo "==== Install TimesTen ===="
+ ${scriptdir}/../timesten/ttinstall -f
+echo "==== Install Ords ===="
+ ${scriptdir}/../ords/setupords
+
+#echo "==== Creating database ===="
+#sudo -n -u oracle -- ${scriptdir}/../timesten/createdb
+
+

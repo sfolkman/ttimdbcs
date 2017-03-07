@@ -1,0 +1,55 @@
+#!/bin/sh
+
+LCH=$1
+SRC=$2
+
+. /home/opc/conf/ttdb.conf
+. ${ttdir}/bin/ttenv.sh
+
+DSNS=${dbname}
+DSND=${dbname}
+USR=${user}
+PWD=${pwd}
+RAMLOAD="-ramLoad"
+DELXLA=
+
+while [ $# -gt 0 ]; do
+   case $1 in
+   -dest) shift; DSND=$1 ;;
+   -src) shift; DSNS=$1 ;;
+   -rl)  RAMLOAD="" ;;
+   -xla) DELXLA="-delXla" ;;
+   esac
+   shift;
+done
+if [ "x${LCH}" = "x" ]; then
+  echo "ERROR: no localhost ip argument found"
+  exit 1;
+fi
+if [ "x${SRC}" = "x" ]; then
+  echo "ERROR: no src ip argument found"
+  exit 1;
+fi
+
+echo "ttRepAdmin -duplicate -verbosity 2 $DELXLA $RAMLOAD -from $DSNS -host $SRC -uid $USR -pwd $PWD -localhost $LCH -dsn $DSND"
+time  ttRepAdmin -duplicate -verbosity 2 $DELXLA $RAMLOAD -from $DSNS -host $SRC -uid $USR -pwd $PWD -localhost $LCH -dsn $DSND
+cstatus=$?
+if [ ${cstatus} -ne 0 ]; then
+  echo "ERROR: ttrepadmin returned ${cstatus}, exit."
+  exit 1
+fi
+
+echo "ttAdmin -wait -repStart $DSND"
+time  ttAdmin -wait -repStart $DSND
+cstatus=$?
+if [ ${cstatus} -ne 0 ]; then
+  echo "ERROR: ttrepadmin returned ${cstatus}, exit."
+  exit 1
+fi
+
+ttIsql -e "call ttrepstateget(); quit;" dsn=$DSND
+sleep 5;
+ttIsql -e "call ttrepstateget(); quit;" dsn=$DSND
+
+
+

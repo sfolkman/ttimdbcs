@@ -1,0 +1,3 @@
+#!/bin/sh
+sudo groupadd --system oracle
+sudo useradd --system -s /bin/bash -g oracle oracle

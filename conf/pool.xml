@@ -1,0 +1,26 @@
+<?xml version = '1.0' encoding = 'UTF-8'?>
+<!DOCTYPE properties SYSTEM "http://java.sun.com/dtd/properties.dtd">
+<properties>
+   <comment>Saved on Tue Dec 20 11:25:06 EST 2016</comment>
+   <entry key="db.connectionType">customurl</entry>
+   <entry key="db.customURL">jdbc:timesten:client:ttrestapidbcs</entry>
+   <entry key="db.password">ttrestapidb</entry>
+   <entry key="db.username">ttrestapidb</entry>
+   <entry key="debug.debugger">true</entry>
+   <entry key="debug.printDebugToScreen">true</entry>
+   <entry key="error.keepErrorMessages">true</entry>
+   <entry key="error.maxEntries">50</entry>
+   <entry key="jdbc.driverName">com.timesten.jdbc.TimesTenDataSource</entry>
+   <entry key="jdbc.InactivityTimeout">1800</entry>
+   <entry key="jdbc.InitialLimit">3</entry>
+   <entry key="jdbc.MaxConnectionReuseCount">1000</entry>
+   <entry key="jdbc.MaxLimit">10</entry>
+   <entry key="jdbc.MaxStatementsLimit">10</entry>
+   <entry key="jdbc.MinLimit">1</entry>
+   <entry key="jdbc.statementTimeout">900</entry>
+   <entry key="log.logging">false</entry>
+   <entry key="log.maxEntries">50</entry>
+   <entry key="misc.compress"/>
+   <entry key="security.disableDefaultExclusionList">false</entry>
+   <entry key="security.maxEntries">2000</entry>
+</properties>

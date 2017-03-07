@@ -1,0 +1,5 @@
+#!/bin/sh
+
+#now done by cloud-init
+#/home/opc/scripts/sysadmin/mketchosts
+#/home/opc/scripts/sysadmin/firewall

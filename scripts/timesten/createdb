@@ -1,0 +1,20 @@
+#!/bin/sh
+
+. /home/opc/conf/ttdb.conf
+
+me=$(id --user --name)
+if [ "x${me}" != "xoracle" ]; then
+  echo "ERROR: run this script as oracle user"
+  exit 1
+fi
+
+mkdir -p ${ttbase}/datastores
+
+cat ${cfgdir}/conf/timesten.conf >> ${ttdir}/conf/timesten.conf
+cat ${cfgdir}/conf/odbc.ini >> ${ttdir}/conf/sys.odbc.ini
+sed -i -e "s/TTC_Server=\(.*\)/TTC_Server=$(hostname)/" ${ttdir}/conf/sys.odbc.ini
+. ${ttdir}/bin/ttenv.sh
+export ODBCINI=${ttdir}/conf/sys.odbc.ini
+${ttdir}/install/PERL/bin/perl ${cfgdir}/scripts/timesten/cruser -r -u ${user} -p ${pwd} dsn=${dbname}
+${ttdir}/bin/ttisql -f ${cfgdir}/conf/ttRestApiDb.sql dsn="${dbname};uid=${user};pwd=${pwd}"
+${ttdir}/bin/ttstatus
