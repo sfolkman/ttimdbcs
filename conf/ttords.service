@@ -10,8 +10,8 @@ User=oracle
 Group=oracle
 Type=forking
 Restart=on-failure
-PIDFile=/opt/ords/ords.pid
-ExecStart=/opt/ttimdbcs/scripts/ords/launchords
+PIDFile=/home/opc//ords.3.0.9.348.07.16/ords.pid
+ExecStart=/home/opc//ttimdbcs/scripts/ords/launchords
 #ExecStop=kill -9 $(cat /opt/ords/ords.pid)
 
 [Install]

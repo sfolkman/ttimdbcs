@@ -2,13 +2,10 @@
 
 # this was used to create original images
 # now we create custom images from existing ones using bmc console
-# see also /usr/lib/systemd/system/tt* /opt/TimesTen/* /opt/ords/*
+# see also /usr/lib/systemd/system/tt* 
 
-ttsvc_root=/opt
-if [ $# -eq 1 ]; then
-  ttsvc_root=$1
-fi
-. ${ttsvc_root}/ttimdbcs/conf/ttsvc.conf
+mypath="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+. "${mypath/ttimdbcs*/}/ttimdbcs/conf/ttsvc.conf"
 scriptdir=${ttsvc_scripts}/sysadmin
 
 # Done by cloud-init now down to # end of cloud-init
@@ -32,9 +29,9 @@ if [ ! -d ${JAVA_HOME} ]; then
  tar -C ${ttsvc_root} -xzf ${jrepkg}
 fi
 echo "==== Install TimesTen ===="
- ${scriptdir}/../timesten/ttinstall -f
+ ${ttsvc_scripts}/timesten/ttinstall --force
 echo "==== Install Ords ===="
- ${scriptdir}/../ords/setupords
+ ${ttsvc_scripts}/ords/setupords 
 
 #echo "==== Creating database ===="
 #sudo -n -u oracle -- ${scriptdir}/../timesten/createdb

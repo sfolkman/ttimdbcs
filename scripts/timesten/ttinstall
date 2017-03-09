@@ -1,35 +1,18 @@
 #/bin/sh
 
-ttsvc_root=${TTSVC_ROOT:-/opt}
-. ${ttsvc_root}/ttimdbcs/conf/ttsvc.conf
-. ${ttsvc_config}/ttdb.conf
-
-destdir=${ttsvc_root}/TimesTen   # resulting distribution is ${destdir}/tt${insname}
-cs="server"
-force=0                          # force=1, means remove and overwrite existing dest
-platform=linux8664      
-release=12.1.1.1.0               # directory name when unpacked
-dport=6624
-csport=6625
-doit=1
-tarball="x"
-
-while [ $# -gt 0 ]; do
-  case $1 in
-  -f|--force) force=1 ;;
-  -m|--daemonport) shift; dport=$1 ;;
-  -p|--platform) shift; platform=$1 ;;
-  -r|--release) shift ; release=$1  ;;
-  -s|--csport|--serverport) shift; csport=$1 ;;
-  esac
-  shift
-done
-
 id=$(id -u)
 if [ ${id} -ne 0 ]; then
    echo "ERROR: need to run as root"
    exit 1
 fi
+
+mypath="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+. "${mypath/ttimdbcs*/}ttimdbcs/conf/ttsvc.conf"
+
+#echo "force=$force"
+
+unpackto=${ttsvc_root}/TimesTen   # resulting distribution is ${unpackto}/tt${insname}
+doit=1
 
 if [ ${tarball} = "x" ]; then
   tarball=${ttsvc_pkgs}/timesten${insname}.${cs}.${platform}.tar.gz
@@ -41,21 +24,21 @@ if [ ! -r ${tarball} ] ; then
 fi
 
 mkdir -p ${ttbase}
-chown -R oracle:oracle ${loc}
-mkdir -p ${destdir}
+chown -R oracle:oracle ${ttbase}
+mkdir -p ${unpackto}
 
-if [ -e ${destdir}/tt${release} ]; then
+if [ -e ${unpackto}/tt${release} ]; then
 
    if [ ${force} -gt 0 ]; then
      # cleanup
      rm -rf /etc/init.d/tt_${insname} /etc/rc.d/rc?.d/???tt_${insname}
      pkill -9 timestend
      
-     chmod -R +w ${destdir}/tt${release}
-     rm -rf ${destdir}/tt${release} ${ttdir}
+     chmod -R +w ${unpackto}/tt${release}
+     rm -rf ${unpackto}/tt${release} ${ttdir}
      doit=1
    else
-     echo "${destdir}/tt${release} exists.  Use -f to replace"
+     echo "${unpackto}/tt${release} exists.  Use -f to replace"
      doit=0
    fi
 
@@ -63,19 +46,19 @@ fi
 
 if [ ${doit} -gt 0 ]; then
 
-   tar -C ${destdir} -xzf ${tarball}
-   chown -R oracle:oracle ${destdir}
+   tar -C ${unpackto} -xzf ${tarball}
+   chown -R oracle:oracle ${unpackto}
 
    # now switch to oracle user!
    sudo su oracle <<EOF
-   ${destdir}/tt${release}/bin/ttInstanceCreate -location ${loc} -name ${insname} -daemonport ${dport} -csport ${csport}
+   ${unpackto}/tt${release}/bin/ttInstanceCreate -location ${ttbase} -name ${insname} -daemonport ${dport} -csport ${csport}
 EOF
 
 fi
 
 
 rm -f ${svcdir}/timesten.service
-sed -e "s^/u01/TimesTen/121110^${ttdir}^" ${ttsvc_config}/timesten.service > /usr/lib/systemd/system/timesten.service
+sed -e "s^/u01/TimesTen/121110^${ttdir}^" ${ttsvc_config}/timesten.service > ${svcdir}/timesten.service
 systemctl -f enable timesten.service
 echo ""
 echo "Using systemd instead of daemon startup/shutdown scripts"

@@ -1,8 +1,7 @@
 #!/bin/sh
 
-ttsvc_root=${TTSVC_ROOT:-/opt}
-. ${ttsvc_root}/ttimdbcs/conf/ttsvc.conf
-. ${ttsvc_config}/ords.conf
+mypath="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+. "${mypath/ttimdbcs*/}ttimdbcs/conf/ttsvc.conf"
 
 ordfile=$(ls -rt ${ttsvc_pkgs}/ords.3.*.zip | tail -1)
 
@@ -19,7 +18,10 @@ mkdir -p ${orddir}
 unzip -o -d ${orddir} ${ordfile}
 chown -R oracle:oracle ${orddir}
 
+systemctl stop ttords.service
 rm -f ${svcdir}/ttords.service
+sed -i -e "s;PIDFile=\(.*\);PIDFile=${orddir}/ords.pid;" ${ttsvc_config}/ttords.service
+sed -i -e "s;ExecStart=\(.*\);ExecStart=${ttsvc_scripts}/ords/launchords;" ${ttsvc_config}/ttords.service
 cp ${ttsvc_config}/ttords.service ${svcdir}
 
 systemctl -f enable ttords.service
